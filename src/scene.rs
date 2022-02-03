@@ -77,45 +77,59 @@ impl Scene {
         }
     }
 
-    fn get_diffuse(&self, point: &Triple, normal: &Triple, (mr,mg,mb,_): color::RGBA) -> color::RGBA {
+    fn get_diffuse(
+        &self,
+        point: &Triple,
+        normal: &Triple,
+        (mr, mg, mb, _): color::RGBA,
+    ) -> color::RGBA {
         // ambient
-        let (r,g,b,a) = (mr * 0.1, mg * 0.1, mb * 0.1, 1.0);
-        
+        let (r, g, b, a) = (mr * 0.1, mg * 0.1, mb * 0.1, 1.0);
         // directional lights
-        let (r,g,b,a) = self.directional_lights.iter().filter(|l| {
-            match self.cast_ray(&Ray {
-                origin: point.vec_sub(&l.direction.scale(0.01)),
-                direction: l.direction.scale(-1.0)
-            }) {
-                None => true,
-                Some(_) => false,
-            }
-        }).fold((r,g,b,a), |(r,g,b,a),l| {
-            let diffuse = (0.0f32).max(normal.dot_prod(&l.direction.scale(-1.0)));
-            let (lr,lg, lb, _) = l.color;
-            let (dr, dg, db) = (diffuse * lr * mr, diffuse * lg * mg, diffuse * lb * mb);
+        let (r, g, b, a) = self
+            .directional_lights
+            .iter()
+            .filter(|l| {
+                match self.cast_ray(&Ray {
+                    origin: point.vec_sub(&l.direction.scale(0.01)),
+                    direction: l.direction.scale(-1.0),
+                }) {
+                    None => true,
+                    Some(_) => false,
+                }
+            })
+            .fold((r, g, b, a), |(r, g, b, a), l| {
+                let diffuse = (0.0f32).max(normal.dot_prod(&l.direction.scale(-1.0)));
+                let (lr, lg, lb, _) = l.color;
+                let (dr, dg, db) = (diffuse * lr * mr, diffuse * lg * mg, diffuse * lb * mb);
 
-            (r+dr,g+dg,b+db,a)
-        });
+                (r + dr, g + dg, b + db, a)
+            });
         // positional lights
-        let (r,g,b,a) = self.point_lights.iter().filter(|l| {
-            let direction = l.position.vec_sub(point).unit_vector();
-            match self.cast_ray(&Ray {
-                origin: point.vec_add(&direction.scale(0.01)),
-                direction: direction
-            }) {
-                None => true,
-                Some(_) => false,
-            }
-        }).fold((r,g,b,a), |(r,g,b,a),l| {
-            let direction = l.position.vec_sub(point).unit_vector();
-            let diffuse = (0.0f32).max(normal.dot_prod(&direction));
-            let (lr,lg, lb, _) = l.color;
-            let (dr, dg, db) = (diffuse * lr * mr, diffuse * lg * mg, diffuse * lb * mb);
+        let (r, g, b, a) = self
+            .point_lights
+            .iter()
+            .filter(|l| {
+                let delta = l.position.vec_sub(point);
+                let distance_squared = delta.dot_prod(&delta);
+                let direction = delta.unit_vector();
+                let origin = point.vec_add(&direction.scale(0.01));
+                match self.cast_ray(&Ray { origin, direction }) {
+                    None => true,
+                    Some((t, _)) => {
+                        distance_squared < (t-0.01)*(t-0.01)
+                    }
+                }
+            })
+            .fold((r, g, b, a), |(r, g, b, a), l| {
+                let direction = l.position.vec_sub(point).unit_vector();
+                let diffuse = (0.0f32).max(normal.dot_prod(&direction));
+                let (lr, lg, lb, _) = l.color;
+                let (dr, dg, db) = (diffuse * lr * mr, diffuse * lg * mg, diffuse * lb * mb);
 
-            (r+dr,g+dg,b+db,a)
-        });
+                (r + dr, g + dg, b + db, a)
+            });
 
-        (r,g,b,a)
+        (r, g, b, a)
     }
 }
