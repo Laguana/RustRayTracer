@@ -1,2 +1,2 @@
 
-pub type RGBA = (u8,u8,u8,u8);
+pub type RGBA = (f32,f32,f32,f32);

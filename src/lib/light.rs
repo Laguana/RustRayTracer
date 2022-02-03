@@ -3,12 +3,12 @@ use crate::lib::color::RGBA;
 
 #[derive(Debug, Clone, Copy)]
 pub struct PointLight {
-    color: RGBA,
-    position: Triple,
+    pub color: RGBA,
+    pub position: Triple,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct UniformLight {
-    color: RGBA,
-    direction: Triple,
+    pub color: RGBA,
+    pub direction: Triple,
 }

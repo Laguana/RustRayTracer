@@ -33,7 +33,7 @@ impl Tracable for Plane {
 
 #[derive(Debug, Clone, Copy)]
 pub struct PlaneSegment {
-    plane: Plane,
+    pub plane: Plane,
     u_vector: Triple,
     v_vector: Triple,
     u_width: f32,

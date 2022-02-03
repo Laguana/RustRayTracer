@@ -1,7 +1,10 @@
+use crate::lib::ray::Ray;
+use crate::lib::ray::Triple;
 use crate::lib::tracable::Drawable;
 use crate::lib::tracable::Renderable;
 use crate::lib::tracable::Tracable;
 use crate::shapes::sphere::Sphere;
+use crate::lib::color::RGBA;
 
 #[derive(Debug)]
 pub struct NormalSphere {
@@ -15,20 +18,23 @@ impl NormalSphere {
 }
 
 impl Tracable for NormalSphere {
-    fn intersect(&self, r: &crate::lib::ray::Ray) -> std::vec::Vec<f32> {
+    fn intersect(&self, r: &Ray) -> std::vec::Vec<f32> {
         self.sphere.intersect(r)
     }
 }
 
 impl Renderable for NormalSphere {
-    fn color(&self, _: &crate::lib::ray::Ray, p: &crate::lib::ray::Triple) -> (u8, u8, u8, u8) {
+    fn material_color(&self, _: &Ray, p: &Triple) -> RGBA {
         let normal = self.sphere.normal(p);
         (
-            128+(normal.x * 127.0).trunc() as u8,
-            128+(normal.y * 127.0).trunc() as u8,
-            128+(normal.z * 127.0).trunc() as u8,
-            1,
+            (normal.x + 1.0) / 2.0,
+            (normal.y + 1.0) / 2.0,
+            (normal.z + 1.0) / 2.0,
+            1.0,
         )
+    }
+    fn normal(&self, p: &Triple) -> Triple {
+        self.sphere.normal(p)
     }
 }
 

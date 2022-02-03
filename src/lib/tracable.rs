@@ -8,7 +8,8 @@ pub trait Tracable {
 }
 
 pub trait Renderable {
-    fn color(&self, ray: &Ray, point: &Triple) -> RGBA;
+    fn material_color(&self, ray: &Ray, point: &Triple) -> RGBA;
+    fn normal(&self, point: &Triple) -> Triple;
 }
 
 pub trait Drawable : Tracable + Renderable {
