@@ -41,7 +41,7 @@ pub struct PlaneSegment {
 }
 
 impl PlaneSegment {
-    fn new(
+    pub fn new(
         plane: Plane,
         u_vec: Triple,
         v_vec: Triple,
@@ -51,7 +51,7 @@ impl PlaneSegment {
         // ensure u_vec and v_vec are unit vectors along the plane; i.e. perpendicular to the plane
         let u_norm_component = u_vec.dot_prod(&plane.normal);
         let v_norm_component = v_vec.dot_prod(&plane.normal);
-        if u_norm_component.abs() < 1e-10 || v_norm_component.abs() < 1e-10 {
+        if u_norm_component.abs() > 0.9 || v_norm_component.abs() > 0.9 {
             panic!("Found a u/v vector pointing mostly along the normal!");
         }
         let u_vector = u_vec
@@ -70,7 +70,7 @@ impl PlaneSegment {
         }
     }
 
-    fn uv_coords(&self, point: &Triple) -> (f32, f32) {
+    pub fn uv_coords(&self, point: &Triple) -> (f32, f32) {
         let delta = point.vec_sub(&self.plane.reference);
         let u_component = delta.dot_prod(&self.u_vector);
         let v_component = delta.dot_prod(&self.v_vector);

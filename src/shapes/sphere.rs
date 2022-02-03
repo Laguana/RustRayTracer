@@ -7,8 +7,23 @@ pub struct Sphere {
     radius: f32,
 }
 
+impl Sphere {
+    pub fn new(center: Triple, radius: f32) -> Sphere {
+        Sphere { center, radius }
+    }
+
+    pub fn normal(&self, point: &Triple) -> Triple {
+        if *point == self.center {
+            panic!("Attempting to find the normal at the center of a sphere");
+        }
+
+        point.vec_sub(&self.center).unit_vector()
+    }
+}
+
 impl Tracable for Sphere {
     fn intersect(&self, ray: &crate::lib::ray::Ray) -> std::vec::Vec<f32> {
+        //println!("{:?} x {:?}", self, ray);
         // solving for |(P-C)| = r
         // (P-C).(P-C) = r^2
         // P = ray.origin + t*ray.direction
@@ -20,20 +35,19 @@ impl Tracable for Sphere {
         let offset = ray.origin.vec_sub(&self.center);
         let c = offset.dot_prod(&offset) - self.radius * self.radius;
         let b = 2.0 * offset.dot_prod(&ray.direction);
-        let descriminant = b*b - 4.0 * c;
+        let descriminant = b * b - 4.0 * c;
         if descriminant < 0.0 {
             // There is no intersection
-            return vec![]
+            return vec![];
         }
 
         if descriminant == 0.0 {
             // There is a single intersection
-            return vec![-b/2.0];
+            return vec![-b / 2.0];
         }
 
         let sqrt = (descriminant).sqrt();
 
-        return vec![(-b + sqrt)/2.0, (-b - sqrt)/2.0]
-
+        return vec![(-b + sqrt) / 2.0, (-b - sqrt) / 2.0];
     }
 }
