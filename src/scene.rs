@@ -8,6 +8,7 @@ use crate::lib::tracable;
 pub struct Scene {
     objects: Vec<Box<dyn tracable::Drawable>>,
     skybox: Box<dyn Fn(&Ray) -> color::RGBA>,
+    ambient_light: color::RGBA,
     point_lights: Vec<light::PointLight>,
     directional_lights: Vec<light::UniformLight>,
 }
@@ -17,6 +18,7 @@ impl Scene {
         Scene {
             objects: vec![],
             skybox: Box::new(|_| (0.0, 0.0, 0.0, 0.0)),
+            ambient_light: (0.1, 0.1, 0.1, 1.0),
             point_lights: vec![],
             directional_lights: vec![],
         }
@@ -32,6 +34,10 @@ impl Scene {
 
     pub fn add_directional_light(&mut self, light: light::UniformLight) {
         self.directional_lights.push(light)
+    }
+
+    pub fn set_ambient_light(&mut self, light: color::RGBA) {
+        self.ambient_light = light;
     }
 
     pub fn set_skybox(&mut self, skybox: Box<dyn Fn(&Ray) -> color::RGBA>) {
@@ -84,7 +90,8 @@ impl Scene {
         (mr, mg, mb, _): color::RGBA,
     ) -> color::RGBA {
         // ambient
-        let (r, g, b, a) = (mr * 0.1, mg * 0.1, mb * 0.1, 1.0);
+        let (ar, ag, ab, _) = self.ambient_light;
+        let (r, g, b, a) = (mr * ar, mg * ag, mb * ab, 1.0);
         // directional lights
         let (r, g, b, a) = self
             .directional_lights
@@ -109,25 +116,25 @@ impl Scene {
         let (r, g, b, a) = self
             .point_lights
             .iter()
-            .filter(|l| {
+            .fold((r, g, b, a), |(r, g, b, a), l| {
                 let delta = l.position.vec_sub(point);
                 let distance_squared = delta.dot_prod(&delta);
                 let direction = delta.unit_vector();
                 let origin = point.vec_add(&direction.scale(0.01));
-                match self.cast_ray(&Ray { origin, direction }) {
+                let visible = match self.cast_ray(&Ray { origin, direction }) {
                     None => true,
-                    Some((t, _)) => {
-                        distance_squared < (t-0.01)*(t-0.01)
-                    }
-                }
-            })
-            .fold((r, g, b, a), |(r, g, b, a), l| {
-                let direction = l.position.vec_sub(point).unit_vector();
-                let diffuse = (0.0f32).max(normal.dot_prod(&direction));
-                let (lr, lg, lb, _) = l.color;
-                let (dr, dg, db) = (diffuse * lr * mr, diffuse * lg * mg, diffuse * lb * mb);
+                    Some((t, _)) => distance_squared < (t + 0.01) * (t + 0.01),
+                };
+                if visible {
+                    let diffuse = (0.0f32).max(normal.dot_prod(&direction));
+                    let (lr, lg, lb, _) = l.color;
+                    let diffuse = diffuse / (distance_squared.max(1.0));
+                    let (dr, dg, db) = (diffuse * lr * mr, diffuse * lg * mg, diffuse * lb * mb);
 
-                (r + dr, g + dg, b + db, a)
+                    (r + dr, g + dg, b + db, a)
+                } else {
+                    (r, g, b, a)
+                }
             });
 
         (r, g, b, a)

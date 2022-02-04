@@ -36,8 +36,8 @@ pub struct PlaneSegment {
     pub plane: Plane,
     u_vector: Triple,
     v_vector: Triple,
-    u_width: f32,
-    v_height: f32,
+    pub u_width: f32,
+    pub v_height: f32,
 }
 
 impl PlaneSegment {
@@ -86,10 +86,10 @@ impl Tracable for PlaneSegment {
             Some(t) => {
                 let point = ray.origin.vec_add(&ray.direction.scale(*t));
                 let (u_component, v_component) = self.uv_coords(&point);
-                if u_component > 0.0
-                    && u_component < self.u_width
-                    && v_component > 0.0
-                    && v_component < self.v_height
+                if u_component > -1e-7
+                    && u_component < self.u_width + 1e-7
+                    && v_component > -1e-7
+                    && v_component < self.v_height + 1e-7
                 {
                     potential_intersect
                 } else {

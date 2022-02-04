@@ -37,7 +37,7 @@ impl Renderable for ColoredPlane {
         p: &Triple,
     ) -> RGBA {
         let (u, v) = self.geometry.uv_coords(p);
-        (self.uv_mapped_color)(u, v)
+        (self.uv_mapped_color)(u/self.geometry.u_width, v/self.geometry.v_height)
     }
 
     fn normal(&self, _: &Triple) -> Triple {
