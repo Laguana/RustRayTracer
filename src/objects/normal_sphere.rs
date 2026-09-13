@@ -31,7 +31,7 @@ impl Renderable for NormalSphere {
             (normal.y + 1.0) / 2.0,
             (normal.z + 1.0) / 2.0,
             1.0,
-        )
+        ).into()
     }
     fn normal(&self, p: &Triple) -> Triple {
         self.sphere.normal(p)

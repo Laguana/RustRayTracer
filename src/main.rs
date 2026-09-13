@@ -3,16 +3,20 @@ mod objects;
 mod scene;
 mod shapes;
 
-use std::fs::File;
-use std::io::BufWriter;
-use std::path::Path;
-
 use lib::light;
 use lib::ray::Ray;
 use lib::ray::Triple;
 use shapes::plane::Plane;
 use shapes::plane::PlaneSegment;
 use shapes::sphere::Sphere;
+
+extern crate sdl3;
+
+use sdl3::pixels::Color;
+use sdl3::event::Event;
+use sdl3::keyboard::Keycode;
+use sdl3::rect::Point;
+use std::time::Instant;
 
 fn main() {
     println!("Hello, world!");
@@ -27,26 +31,22 @@ fn main() {
         z: -2.0,
     };
 
-    let path = Path::new(r"out.png");
-    let file = File::create(path).unwrap();
-    let ref mut w = BufWriter::new(file);
+    let sdl_context = sdl3::init().unwrap();
+    let video_subsystem = sdl_context.video().unwrap();
 
-    let mut encoder = png::Encoder::new(w, width, height);
-    encoder.set_color(png::ColorType::Rgb);
-    encoder.set_depth(png::BitDepth::Eight);
-    /*
-    encoder.set_trns(vec!(0xFFu8, 0xFFu8, 0xFFu8, 0xFFu8));
-    encoder.set_source_gamma(png::ScaledFloat::from_scaled(45455)); // 1.0 / 2.2, scaled by 100000
-    encoder.set_source_gamma(png::ScaledFloat::new(1.0 / 2.2));     // 1.0 / 2.2, unscaled, but rounded
-    let source_chromaticities = png::SourceChromaticities::new(     // Using unscaled instantiation here
-        (0.31270, 0.32900),
-        (0.64000, 0.33000),
-        (0.30000, 0.60000),
-        (0.15000, 0.06000)
-    );
-    encoder.set_source_chromaticities(source_chromaticities);
-    */
-    let mut writer = encoder.write_header().unwrap();
+    let window = video_subsystem.window("ray tracer", width, height)
+        .position_centered()
+        .build()
+        .unwrap();
+
+    let mut canvas = window.into_canvas();
+
+    canvas.set_draw_color(Color::RGB(0, 255, 255));
+    canvas.clear();
+    canvas.present();
+
+    let mut event_pump = sdl_context.event_pump().unwrap();
+
 
     let mut scene = scene::Scene::new();
     scene.set_skybox(Box::new(|r| {
@@ -55,11 +55,11 @@ fn main() {
             (r.direction.y + 1.0) / 2.0,
             (r.direction.z + 1.0) / 2.0,
             1.0,
-        )
+        ).into()
     }));
     
     scene.add_directional_light(light::UniformLight {
-        color: (0.0, 1.0, 0.0, 1.0),
+        color: (0.0, 1.0, 0.0, 1.0).into(),
         direction: Triple {
             x: 0.0,
             y: -1.0,
@@ -68,7 +68,7 @@ fn main() {
     });
     
     scene.add_point_light(light::PointLight {
-        color: (1.0, 0.0, 0.0, 1.0),
+        color: (1.0, 0.0, 0.0, 1.0).into(),
         position: Triple {
             x: 0.75,
             y: -0.75,
@@ -117,9 +117,9 @@ fn main() {
             let x = (u * 10.0).trunc() as u8;
             let y = (v * 10.0).trunc() as u8;
             if (x + y) % 2 == 0 {
-                (1.0, 1.0, 1.0, 1.0)
+                (1.0, 1.0, 1.0, 1.0).into()
             } else {
-                (0.0, 0.0, 0.0, 0.0)
+                (0.0, 0.0, 0.0, 0.0).into()
             }
         }),
     )));
@@ -127,25 +127,46 @@ fn main() {
     let x_span = x_max - x_min;
     let y_span = y_max - y_min;
 
-    let mut data: Vec<u8> = vec![0; (width * height * 3).try_into().unwrap()];
-    for (i, chunk) in data.chunks_mut(3).enumerate() {
-        let y_idx = 1.0 - (i / (width as usize)) as f32 / height as f32;
-        let x_idx = (i % (width as usize)) as f32 / width as f32;
-        let x = x_idx * x_span + x_min;
-        let y = y_idx * y_span + y_min;
-        let z = 0.0;
-        let target = Triple { x, y, z };
-        let direction = target.vec_sub(&ray_origin).unit_vector();
-        let r = Ray {
-            origin: ray_origin,
-            direction,
-        };
-        //println!("{:?}", r);
-        let (r, g, b, _) = scene.get_color(&r);
-        chunk[0] = (r * 255.0).trunc() as u8;
-        chunk[1] = (g * 255.0).trunc() as u8;
-        chunk[2] = (b * 255.0).trunc() as u8;
+    let mut fps = 0;
+    let mut now = Instant::now();
+    'running: loop {
+        for x_idx in 0..width {
+            for y_idx in 0..height {
+
+                let x = (x_idx as f32 / width as f32) * x_span + x_min;
+                let y = (y_idx as f32 / height as f32) * y_span + y_min;
+                let z = 0.0;
+                let target = Triple { x, y, z };
+                let direction = target.vec_sub(&ray_origin).unit_vector();
+                let r = Ray {
+                    origin: ray_origin,
+                    direction,
+                };
+                //println!("{:?}", r);
+                
+                canvas.set_draw_color(scene.get_color(&r));
+                canvas.draw_point(Point::new(x_idx as i32, y_idx as i32)).unwrap();
+            }
+        }
+
+        canvas.present();
+
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit {..} |
+                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    break 'running
+                },
+                _ => {}
+            }
+        }
+
+        fps += 1;
+        if now.elapsed().as_secs() >= 1 {
+            now = Instant::now();
+            println!("{}", fps);
+            fps = 0;
+        }
     }
 
-    writer.write_image_data(data.as_slice()).unwrap()
 }

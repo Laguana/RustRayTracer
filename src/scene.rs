@@ -17,8 +17,8 @@ impl Scene {
     pub fn new() -> Scene {
         Scene {
             objects: vec![],
-            skybox: Box::new(|_| (0.0, 0.0, 0.0, 0.0)),
-            ambient_light: (0.1, 0.1, 0.1, 1.0),
+            skybox: Box::new(|_| (0.0, 0.0, 0.0, 0.0).into()),
+            ambient_light: (0.1, 0.1, 0.1, 1.0).into(),
             point_lights: vec![],
             directional_lights: vec![],
         }
@@ -87,13 +87,12 @@ impl Scene {
         &self,
         point: &Triple,
         normal: &Triple,
-        (mr, mg, mb, _): color::RGBA,
+        mat: color::RGBA,
     ) -> color::RGBA {
         // ambient
-        let (ar, ag, ab, _) = self.ambient_light;
-        let (r, g, b, a) = (mr * ar, mg * ag, mb * ab, 1.0);
+        let base_diffuse = self.ambient_light * mat;
         // directional lights
-        let (r, g, b, a) = self
+        let directional = self
             .directional_lights
             .iter()
             .filter(|l| {
@@ -105,18 +104,18 @@ impl Scene {
                     Some(_) => false,
                 }
             })
-            .fold((r, g, b, a), |(r, g, b, a), l| {
+            .fold(base_diffuse, |c, l| {
                 let diffuse = (0.0f32).max(normal.dot_prod(&l.direction.scale(-1.0)));
-                let (lr, lg, lb, _) = l.color;
-                let (dr, dg, db) = (diffuse * lr * mr, diffuse * lg * mg, diffuse * lb * mb);
+                let mut light_contribution = l.color * mat * diffuse;
+                light_contribution.a = 0.0;
 
-                (r + dr, g + dg, b + db, a)
+                c + light_contribution
             });
         // positional lights
-        let (r, g, b, a) = self
+        let positional = self
             .point_lights
             .iter()
-            .fold((r, g, b, a), |(r, g, b, a), l| {
+            .fold(directional, |c, l| {
                 let delta = l.position.vec_sub(point);
                 let distance_squared = delta.dot_prod(&delta);
                 let direction = delta.unit_vector();
@@ -127,16 +126,16 @@ impl Scene {
                 };
                 if visible {
                     let diffuse = (0.0f32).max(normal.dot_prod(&direction));
-                    let (lr, lg, lb, _) = l.color;
                     let diffuse = diffuse / (distance_squared.max(1.0));
-                    let (dr, dg, db) = (diffuse * lr * mr, diffuse * lg * mg, diffuse * lb * mb);
+                    let mut light_contribution = l.color * mat * diffuse;
+                    light_contribution.a = 0.0;
 
-                    (r + dr, g + dg, b + db, a)
+                    c + light_contribution
                 } else {
-                    (r, g, b, a)
+                    c
                 }
             });
 
-        (r, g, b, a)
+        positional
     }
 }
