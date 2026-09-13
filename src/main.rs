@@ -127,14 +127,13 @@ fn main() {
     let x_span = x_max - x_min;
     let y_span = y_max - y_min;
 
-    let mut fps = 0;
     let mut now = Instant::now();
     'running: loop {
         for x_idx in 0..width {
             for y_idx in 0..height {
 
                 let x = (x_idx as f32 / width as f32) * x_span + x_min;
-                let y = (y_idx as f32 / height as f32) * y_span + y_min;
+                let y = ((height-y_idx) as f32 / height as f32) * y_span + y_min;
                 let z = 0.0;
                 let target = Triple { x, y, z };
                 let direction = target.vec_sub(&ray_origin).unit_vector();
@@ -161,12 +160,8 @@ fn main() {
             }
         }
 
-        fps += 1;
-        if now.elapsed().as_secs() >= 1 {
-            now = Instant::now();
-            println!("{}", fps);
-            fps = 0;
-        }
+        println!("{}", now.elapsed().as_millis());
+        now = Instant::now();
     }
 
 }
