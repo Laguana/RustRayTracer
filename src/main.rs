@@ -19,7 +19,6 @@ use sdl3::rect::Point;
 use std::time::Instant;
 
 fn main() {
-    println!("Hello, world!");
 
     let (width, height) = (400, 400);
     let (x_min, x_max) = (-1.5, 1.5);
@@ -40,6 +39,7 @@ fn main() {
         .unwrap();
 
     let mut canvas = window.into_canvas();
+    let texture_creator = canvas.texture_creator();
 
     canvas.set_draw_color(Color::RGB(0, 255, 255));
     canvas.clear();
@@ -119,7 +119,7 @@ fn main() {
             if (x + y) % 2 == 0 {
                 (1.0, 1.0, 1.0, 1.0).into()
             } else {
-                (0.0, 0.0, 0.0, 0.0).into()
+                (0.0, 0.0, 0.0, 1.0).into()
             }
         }),
     )));
@@ -127,27 +127,38 @@ fn main() {
     let x_span = x_max - x_min;
     let y_span = y_max - y_min;
 
+    let mut texture = texture_creator.create_texture_streaming(None, width, height).unwrap();
+
     let mut now = Instant::now();
     'running: loop {
-        for x_idx in 0..width {
+        texture.with_lock(None, |buf, pitch|  {
             for y_idx in 0..height {
+                let row_offset = y_idx as usize * pitch ;
+                for x_idx in 0..width {
+                    let offset = row_offset + x_idx as usize * 4;
 
-                let x = (x_idx as f32 / width as f32) * x_span + x_min;
-                let y = ((height-y_idx) as f32 / height as f32) * y_span + y_min;
-                let z = 0.0;
-                let target = Triple { x, y, z };
-                let direction = target.vec_sub(&ray_origin).unit_vector();
-                let r = Ray {
-                    origin: ray_origin,
-                    direction,
-                };
-                //println!("{:?}", r);
-                
-                canvas.set_draw_color(scene.get_color(&r));
-                canvas.draw_point(Point::new(x_idx as i32, y_idx as i32)).unwrap();
+                    let x = (x_idx as f32 / width as f32) * x_span + x_min;
+                    let y = ((height-y_idx) as f32 / height as f32) * y_span + y_min;
+                    let z = 0.0;
+                    let target = Triple { x, y, z };
+                    let direction = target.vec_sub(&ray_origin).unit_vector();
+                    let r = Ray {
+                        origin: ray_origin,
+                        direction,
+                    };
+                    let color: sdl3::pixels::Color = scene.get_color(&r).into();
+
+                    // HACK: empirically this works right now, really it should
+                    // be done based on the pixel format.
+                    buf[offset] = color.b;
+                    buf[offset+1] = color.g;
+                    buf[offset+2] = color.r;
+                    buf[offset+3] = color.a;
+                }
             }
-        }
+        });
 
+        canvas.copy(&texture,  None, None);
         canvas.present();
 
         for event in event_pump.poll_iter() {
