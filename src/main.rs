@@ -24,7 +24,7 @@ fn main() {
     let (x_min, x_max) = (-1.5, 1.5);
     let (y_min, y_max) = (-1.5, 1.5);
 
-    let ray_origin = Triple {
+    let mut ray_origin = Triple {
         x: 0.0,
         y: 0.0,
         z: -2.0,
@@ -167,6 +167,19 @@ fn main() {
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
                 },
+                Event::KeyDown { keycode: Some(Keycode::A), ..} => {
+                    ray_origin.x -= 0.1;
+                },
+                Event::KeyDown { keycode: Some(Keycode::D), ..} => {
+                    ray_origin.x += 0.1;
+                },
+                Event::KeyDown { keycode: Some(Keycode::W), ..} => {
+                    ray_origin.y -= 0.1;
+                },
+                Event::KeyDown { keycode: Some(Keycode::S), ..} => {
+                    ray_origin.y += 0.1;
+                },
+                
                 _ => {}
             }
         }
