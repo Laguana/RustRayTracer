@@ -4,7 +4,7 @@ mod scene;
 mod shapes;
 
 use base::light;
-use base::ray::Ray;
+use base::camera::Camera;
 use base::ray::Triple;
 use shapes::plane::Plane;
 use shapes::plane::PlaneSegment;
@@ -19,15 +19,26 @@ use std::time::Instant;
 
 fn main() {
 
-    let (width, height) = (400, 400);
-    let (x_min, x_max) = (-1.5, 1.5);
-    let (y_min, y_max) = (-1.5, 1.5);
+    let (width, height): (u32, u32) = (400, 400);
 
-    let mut ray_origin = Triple {
+    let mut camera = Camera::new(Triple {
         x: 0.0,
         y: 0.0,
         z: -2.0,
-    };
+    }, Triple {
+        x: -1.5,
+        y: 1.5,
+        z: 2.0,
+    }, Triple {
+        x: 0.0,
+        y: -3.0,
+        z: 0.0,
+    }, Triple {
+        x: 3.0,
+        y: 0.0,
+        z: 0.0,
+    },
+        width, height);
 
     let sdl_context = sdl3::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -126,9 +137,6 @@ fn main() {
         }),
     )));
 
-    let x_span = x_max - x_min;
-    let y_span = y_max - y_min;
-
     let mut texture = texture_creator.create_texture_streaming(None, width, height).unwrap();
 
     let mut now = Instant::now();
@@ -139,15 +147,8 @@ fn main() {
                 for x_idx in 0..width {
                     let offset = row_offset + x_idx as usize * 4;
 
-                    let x = (x_idx as f32 / width as f32) * x_span + x_min;
-                    let y = ((height-y_idx) as f32 / height as f32) * y_span + y_min;
-                    let z = 0.0;
-                    let target = Triple { x, y, z };
-                    let direction = target - (&ray_origin).unit_vector();
-                    let r = Ray {
-                        origin: ray_origin,
-                        direction,
-                    };
+                    let r = camera.pixel_ray(x_idx, y_idx);
+
                     let color: sdl3::pixels::Color = scene.get_color(&r).into();
 
                     // HACK: empirically this works right now, really it should
@@ -170,16 +171,22 @@ fn main() {
                     break 'running
                 },
                 Event::KeyDown { keycode: Some(Keycode::A), ..} => {
-                    ray_origin.x -= 0.1;
+                    camera.origin.x -= 0.1;
                 },
                 Event::KeyDown { keycode: Some(Keycode::D), ..} => {
-                    ray_origin.x += 0.1;
+                    camera.origin.x += 0.1;
                 },
                 Event::KeyDown { keycode: Some(Keycode::W), ..} => {
-                    ray_origin.y -= 0.1;
+                    camera.origin.y -= 0.1;
                 },
                 Event::KeyDown { keycode: Some(Keycode::S), ..} => {
-                    ray_origin.y += 0.1;
+                    camera.origin.y += 0.1;
+                },
+                Event::KeyDown { keycode: Some(Keycode::Q), ..} => {
+                    camera.direction.x -= 0.1;
+                },
+                Event::KeyDown { keycode: Some(Keycode::E), ..} => {
+                    camera.direction.x += 0.1;
                 },
                 
                 _ => {}
