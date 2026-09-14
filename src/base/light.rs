@@ -1,5 +1,5 @@
-use crate::lib::ray::Triple;
-use crate::lib::color::RGBA;
+use crate::base::ray::Triple;
+use crate::base::color::RGBA;
 
 #[derive(Debug, Clone, Copy)]
 pub struct PointLight {

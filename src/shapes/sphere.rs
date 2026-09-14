@@ -1,5 +1,5 @@
-use crate::lib::ray::Triple;
-use crate::lib::tracable::Tracable;
+use crate::base::ray::Triple;
+use crate::base::tracable::Tracable;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Sphere {
@@ -22,7 +22,7 @@ impl Sphere {
 }
 
 impl Tracable for Sphere {
-    fn intersect(&self, ray: &crate::lib::ray::Ray) -> std::vec::Vec<f32> {
+    fn intersect(&self, ray: &crate::base::ray::Ray) -> std::vec::Vec<f32> {
         //println!("{:?} x {:?}", self, ray);
         // solving for |(P-C)| = r
         // (P-C).(P-C) = r^2

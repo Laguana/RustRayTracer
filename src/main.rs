@@ -1,11 +1,11 @@
-mod lib;
+mod base;
 mod objects;
 mod scene;
 mod shapes;
 
-use lib::light;
-use lib::ray::Ray;
-use lib::ray::Triple;
+use base::light;
+use base::ray::Ray;
+use base::ray::Triple;
 use shapes::plane::Plane;
 use shapes::plane::PlaneSegment;
 use shapes::sphere::Sphere;
@@ -15,7 +15,6 @@ extern crate sdl3;
 use sdl3::pixels::Color;
 use sdl3::event::Event;
 use sdl3::keyboard::Keycode;
-use sdl3::rect::Point;
 use std::time::Instant;
 
 fn main() {
@@ -75,6 +74,9 @@ fn main() {
             z: -0.75,
         },
     });
+
+    scene.set_ambient_light((0.1,0.1,0.1,1.0).into());
+
     scene.add_object(Box::new(objects::normal_sphere::NormalSphere::new(
         Sphere::new(
             Triple {
@@ -156,9 +158,9 @@ fn main() {
                     buf[offset+3] = color.a;
                 }
             }
-        });
+        }).unwrap();
 
-        canvas.copy(&texture,  None, None);
+        canvas.copy(&texture,  None, None).unwrap();
         canvas.present();
 
         for event in event_pump.poll_iter() {

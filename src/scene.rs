@@ -1,8 +1,8 @@
-use crate::lib::color;
-use crate::lib::light;
-use crate::lib::ray::Ray;
-use crate::lib::ray::Triple;
-use crate::lib::tracable;
+use crate::base::color;
+use crate::base::light;
+use crate::base::ray::Ray;
+use crate::base::ray::Triple;
+use crate::base::tracable;
 
 //#[derive(Debug)]
 pub struct Scene {
@@ -74,7 +74,7 @@ impl Scene {
             None => (self.skybox)(ray),
             Some((distance, obj)) => {
                 //println!("{:?}@{}", obj, distance);
-                let point = ray.origin.vec_add(&ray.direction.scale(distance));
+                let point = ray.origin + ray.direction.scale(distance);
                 let material_color = obj.material_color(ray, &point);
                 let normal = obj.normal(&point);
 
@@ -119,7 +119,7 @@ impl Scene {
                 let delta = l.position.vec_sub(point);
                 let distance_squared = delta.dot_prod(&delta);
                 let direction = delta.unit_vector();
-                let origin = point.vec_add(&direction.scale(0.01));
+                let origin = point + &direction.scale(0.01) ;
                 let visible = match self.cast_ray(&Ray { origin, direction }) {
                     None => true,
                     Some((t, _)) => distance_squared < (t + 0.01) * (t + 0.01),

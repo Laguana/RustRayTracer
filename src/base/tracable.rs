@@ -1,6 +1,6 @@
-use crate::lib::ray::Ray;
-use crate::lib::color::RGBA;
-use crate::lib::ray::Triple;
+use crate::base::ray::Ray;
+use crate::base::color::RGBA;
+use crate::base::ray::Triple;
 
 pub trait Tracable {
     // return the distances along the ray (including backwards) to intersections

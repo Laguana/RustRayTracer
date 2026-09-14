@@ -6,17 +6,6 @@ pub struct RGBA {
     pub a: f32,
 }
 
-pub fn lerp_color(a: RGBA, b: RGBA, t: f32) -> RGBA {
-    let t = t.max(0.0).min(1.0);
-    let ti = 1.0 - t;
-    (
-        a.r * ti + b.r * t,
-        a.g * ti + b.g * t,
-        a.b * ti + b.b * t,
-        a.a * ti + b.a * t,
-    ).into()
-}
-
 impl From<(f32, f32, f32, f32)> for RGBA {
     fn from((r,g,b,a): (f32, f32, f32, f32)) -> RGBA {
         return RGBA {

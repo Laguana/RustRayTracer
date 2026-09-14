@@ -19,16 +19,48 @@ impl Triple {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
-    pub fn vec_add(&self, other: &Triple) -> Triple {
-        return Triple::new(self.x + other.x, self.y + other.y, self.z + other.z);
-    }
-
     pub fn vec_sub(&self, other: &Triple) -> Triple {
         return Triple::new(self.x - other.x, self.y - other.y, self.z - other.z);
     }
 
     pub fn scale(&self, c: f32) -> Triple {
         return Triple::new(self.x * c, self.y * c, self.z * c);
+    }
+}
+
+impl std::ops::Add for Triple {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
+impl std::ops::Add<&Triple> for Triple {
+    type Output = Triple;
+
+    fn add(self, rhs: &Triple) -> Self::Output {
+        Self::Output {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
+impl std::ops::Add<&Triple> for &Triple {
+    type Output = Triple;
+
+    fn add(self, rhs: &Triple) -> Self::Output {
+        Self::Output {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
     }
 }
 

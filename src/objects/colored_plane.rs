@@ -1,9 +1,9 @@
-use crate::lib::color::RGBA;
-use crate::lib::ray::Ray;
-use crate::lib::ray::Triple;
-use crate::lib::tracable::Drawable;
-use crate::lib::tracable::Renderable;
-use crate::lib::tracable::Tracable;
+use crate::base::color::RGBA;
+use crate::base::ray::Ray;
+use crate::base::ray::Triple;
+use crate::base::tracable::Drawable;
+use crate::base::tracable::Renderable;
+use crate::base::tracable::Tracable;
 
 use crate::shapes::plane::PlaneSegment;
 

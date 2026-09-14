@@ -1,5 +1,5 @@
-use crate::lib::ray::Triple;
-use crate::lib::tracable::Tracable;
+use crate::base::ray::Triple;
+use crate::base::tracable::Tracable;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Plane {
@@ -8,7 +8,7 @@ pub struct Plane {
 }
 
 impl Tracable for Plane {
-    fn intersect(&self, ray: &crate::lib::ray::Ray) -> std::vec::Vec<f32> {
+    fn intersect(&self, ray: &crate::base::ray::Ray) -> std::vec::Vec<f32> {
         let denom = self.normal.dot_prod(&ray.direction);
         // denom represents how far along the plane normal the ray travels per unit
         // distance along the ray direction.
@@ -79,12 +79,12 @@ impl PlaneSegment {
 }
 
 impl Tracable for PlaneSegment {
-    fn intersect(&self, ray: &crate::lib::ray::Ray) -> std::vec::Vec<f32> {
+    fn intersect(&self, ray: &crate::base::ray::Ray) -> std::vec::Vec<f32> {
         let potential_intersect = self.plane.intersect(ray);
         match potential_intersect.get(0) {
             None => potential_intersect,
             Some(t) => {
-                let point = ray.origin.vec_add(&ray.direction.scale(*t));
+                let point = ray.origin + &ray.direction.scale(*t);
                 let (u_component, v_component) = self.uv_coords(&point);
                 if u_component > -1e-7
                     && u_component < self.u_width + 1e-7
