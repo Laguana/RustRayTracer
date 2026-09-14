@@ -15,16 +15,9 @@ impl Triple {
         return Triple::new(self.x / magnitude, self.y / magnitude, self.z / magnitude);
     }
 
-    pub fn dot_prod(&self, other: &Triple) -> f32 {
+    pub fn dot_prod<T: std::borrow::Borrow<Triple>>(&self, other: T) -> f32 {
+        let other = other.borrow();
         self.x * other.x + self.y * other.y + self.z * other.z
-    }
-
-    pub fn vec_sub(&self, other: &Triple) -> Triple {
-        return Triple::new(self.x - other.x, self.y - other.y, self.z - other.z);
-    }
-
-    pub fn scale(&self, c: f32) -> Triple {
-        return Triple::new(self.x * c, self.y * c, self.z * c);
     }
 }
 
@@ -52,6 +45,18 @@ impl std::ops::Add<&Triple> for Triple {
     }
 }
 
+impl std::ops::Add<Triple> for &Triple {
+    type Output = Triple;
+
+    fn add(self, rhs: Triple) -> Self::Output {
+        Self::Output {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
 impl std::ops::Add<&Triple> for &Triple {
     type Output = Triple;
 
@@ -61,6 +66,58 @@ impl std::ops::Add<&Triple> for &Triple {
             y: self.y + rhs.y,
             z: self.z + rhs.z,
         }
+    }
+}
+
+impl std::ops::Sub for Triple {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
+impl std::ops::Sub<&Triple> for Triple {
+    type Output = Self;
+
+    fn sub(self, rhs: &Triple) -> Self {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
+impl std::ops::Sub<Triple> for &Triple {
+    type Output = Triple;
+
+    fn sub(self, rhs: Triple) -> Self::Output {
+        Self::Output {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
+impl std::ops::Mul<f32> for Triple {
+    type Output = Triple;
+
+    fn mul(self, c: f32) -> Self::Output {
+        return Triple::new(self.x * c, self.y * c, self.z * c);
+    }
+}
+
+impl std::ops::Mul<f32> for &Triple {
+    type Output = Triple;
+
+    fn mul(self, c: f32) -> Self::Output {
+        return Triple::new(self.x * c, self.y * c, self.z * c);
     }
 }
 

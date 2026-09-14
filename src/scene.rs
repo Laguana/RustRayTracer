@@ -74,7 +74,7 @@ impl Scene {
             None => (self.skybox)(ray),
             Some((distance, obj)) => {
                 //println!("{:?}@{}", obj, distance);
-                let point = ray.origin + ray.direction.scale(distance);
+                let point = ray.origin + (ray.direction * distance);
                 let material_color = obj.material_color(ray, &point);
                 let normal = obj.normal(&point);
 
@@ -97,15 +97,15 @@ impl Scene {
             .iter()
             .filter(|l| {
                 match self.cast_ray(&Ray {
-                    origin: point.vec_sub(&l.direction.scale(0.01)),
-                    direction: l.direction.scale(-1.0),
+                    origin: point - l.direction * 0.01,
+                    direction: l.direction * -1.0,
                 }) {
                     None => true,
                     Some(_) => false,
                 }
             })
             .fold(base_diffuse, |c, l| {
-                let diffuse = (0.0f32).max(normal.dot_prod(&l.direction.scale(-1.0)));
+                let diffuse = (0.0f32).max(normal.dot_prod(l.direction *-1.0));
                 let mut light_contribution = l.color * mat * diffuse;
                 light_contribution.a = 0.0;
 
@@ -116,10 +116,10 @@ impl Scene {
             .point_lights
             .iter()
             .fold(directional, |c, l| {
-                let delta = l.position.vec_sub(point);
+                let delta = l.position - point;
                 let distance_squared = delta.dot_prod(&delta);
                 let direction = delta.unit_vector();
-                let origin = point + &direction.scale(0.01) ;
+                let origin = point + direction * 0.01 ;
                 let visible = match self.cast_ray(&Ray { origin, direction }) {
                     None => true,
                     Some((t, _)) => distance_squared < (t + 0.01) * (t + 0.01),

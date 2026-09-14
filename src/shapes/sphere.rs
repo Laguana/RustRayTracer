@@ -17,7 +17,7 @@ impl Sphere {
             panic!("Attempting to find the normal at the center of a sphere");
         }
 
-        point.vec_sub(&self.center).unit_vector()
+        (point - self.center).unit_vector()
     }
 }
 
@@ -32,7 +32,7 @@ impl Tracable for Sphere {
         // r^2 = t^2 * dot(ray.direction, ray.direction) + 2*t*dot(ray.origin-C, ray.direction) + dot(ray.origin-C, ray.origin-C)
         // 0   = t^2 + 2*t*dot(offset, ray.direction) + dot(offset, offset) - r^2
         // solutions are  t = (-b +- sqrt(b*b - 4*a*c))/2a
-        let offset = ray.origin.vec_sub(&self.center);
+        let offset = ray.origin - self.center;
         let c = offset.dot_prod(&offset) - self.radius * self.radius;
         let b = 2.0 * offset.dot_prod(&ray.direction);
         let descriminant = b * b - 4.0 * c;

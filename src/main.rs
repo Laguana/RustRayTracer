@@ -143,7 +143,7 @@ fn main() {
                     let y = ((height-y_idx) as f32 / height as f32) * y_span + y_min;
                     let z = 0.0;
                     let target = Triple { x, y, z };
-                    let direction = target.vec_sub(&ray_origin).unit_vector();
+                    let direction = target - (&ray_origin).unit_vector();
                     let r = Ray {
                         origin: ray_origin,
                         direction,

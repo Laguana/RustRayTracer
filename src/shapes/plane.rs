@@ -1,3 +1,4 @@
+use crate::base::ray::Ray;
 use crate::base::ray::Triple;
 use crate::base::tracable::Tracable;
 
@@ -8,7 +9,7 @@ pub struct Plane {
 }
 
 impl Tracable for Plane {
-    fn intersect(&self, ray: &crate::base::ray::Ray) -> std::vec::Vec<f32> {
+    fn intersect(&self, ray: &Ray) -> std::vec::Vec<f32> {
         let denom = self.normal.dot_prod(&ray.direction);
         // denom represents how far along the plane normal the ray travels per unit
         // distance along the ray direction.
@@ -20,7 +21,7 @@ impl Tracable for Plane {
             // finally, if it's pretty close to 0 then we'll avoid blowing things up and fudge it a little
             return vec![];
         }
-        let normal_distance = self.reference.vec_sub(&ray.origin).dot_prod(&self.normal);
+        let normal_distance = (self.reference - ray.origin).dot_prod(&self.normal);
         // normal_distance represents how far the plane is away from the ray origin
         // in terms of the plane normal
         let ray_distance = normal_distance / denom;
@@ -54,12 +55,8 @@ impl PlaneSegment {
         if u_norm_component.abs() > 0.9 || v_norm_component.abs() > 0.9 {
             panic!("Found a u/v vector pointing mostly along the normal!");
         }
-        let u_vector = u_vec
-            .vec_sub(&plane.normal.scale(u_norm_component))
-            .unit_vector();
-        let v_vector = v_vec
-            .vec_sub(&plane.normal.scale(v_norm_component))
-            .unit_vector();
+        let u_vector = (u_vec - (plane.normal * u_norm_component)).unit_vector();
+        let v_vector = (v_vec - (plane.normal * v_norm_component)).unit_vector();
 
         PlaneSegment {
             plane,
@@ -71,7 +68,7 @@ impl PlaneSegment {
     }
 
     pub fn uv_coords(&self, point: &Triple) -> (f32, f32) {
-        let delta = point.vec_sub(&self.plane.reference);
+        let delta = point - self.plane.reference;
         let u_component = delta.dot_prod(&self.u_vector);
         let v_component = delta.dot_prod(&self.v_vector);
         (u_component, v_component)
@@ -79,12 +76,12 @@ impl PlaneSegment {
 }
 
 impl Tracable for PlaneSegment {
-    fn intersect(&self, ray: &crate::base::ray::Ray) -> std::vec::Vec<f32> {
+    fn intersect(&self, ray: &Ray) -> std::vec::Vec<f32> {
         let potential_intersect = self.plane.intersect(ray);
         match potential_intersect.get(0) {
             None => potential_intersect,
             Some(t) => {
-                let point = ray.origin + &ray.direction.scale(*t);
+                let point = ray.origin + &ray.direction * *t;
                 let (u_component, v_component) = self.uv_coords(&point);
                 if u_component > -1e-7
                     && u_component < self.u_width + 1e-7
