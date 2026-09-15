@@ -6,6 +6,7 @@ mod shapes;
 use base::light;
 use base::camera::Camera;
 use base::ray::Triple;
+use base::quaternion::rotate;
 use shapes::plane::Plane;
 use shapes::plane::PlaneSegment;
 use shapes::sphere::Sphere;
@@ -183,10 +184,10 @@ fn main() {
                     camera.origin.y += 0.1;
                 },
                 Event::KeyDown { keycode: Some(Keycode::Q), ..} => {
-                    camera.direction.x -= 0.1;
+                    camera.direction = rotate(&camera.direction, &Triple {x: 0.0, y: 1.0, z: 0.0}, 0.1);
                 },
                 Event::KeyDown { keycode: Some(Keycode::E), ..} => {
-                    camera.direction.x += 0.1;
+                    camera.direction = rotate(&camera.direction, &Triple {x: 0.0, y: 1.0, z: 0.0}, -0.1);
                 },
                 
                 _ => {}
