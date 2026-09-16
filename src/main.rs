@@ -25,20 +25,17 @@ fn main() {
     let mut camera = Camera::new(Triple {
         x: 0.0,
         y: 0.0,
-        z: -2.0,
-    }, Triple {
-        x: -1.5,
-        y: 1.5,
-        z: 2.0,
+        z: -20.0,
     }, Triple {
         x: 0.0,
-        y: -3.0,
-        z: 0.0,
-    }, Triple {
-        x: 3.0,
         y: 0.0,
+        z: 1.0,
+    }, Triple {
+        x: 0.0,
+        y: -1.0,
         z: 0.0,
     },
+        std::f32::consts::PI / 4.0,
         width, height);
 
     let sdl_context = sdl3::init().unwrap();
@@ -100,6 +97,17 @@ fn main() {
         ),
     )));
 
+    scene.add_object(Box::new(objects::normal_sphere::NormalSphere::new(
+        Sphere::new(
+            Triple {
+                x: 2.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            0.5,
+        ),
+    )));
+
     scene.add_object(Box::new(objects::colored_plane::ColoredPlane::new(
         PlaneSegment::new(
             Plane {
@@ -138,6 +146,38 @@ fn main() {
         }),
     )));
 
+    scene.add_object(Box::new(objects::colored_plane::ColoredPlane::new(
+        PlaneSegment::new(
+            Plane {
+                normal: Triple {
+                    x: 0.0,
+                    y: 0.1,
+                    z: -1.0,
+                }.unit_vector(),
+                reference: Triple {
+                    x: -2.5,
+                    y: -2.5,
+                    z: 4.0,
+                },
+            },
+            Triple {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            Triple {
+                x: 0.0,
+                y: 1.0,
+                z: 0.0,
+            },
+            5.0,
+            5.0,
+        ),
+        Box::new(|u, v| {
+            (10.0*u, 10.0*v, 0.0, 1.0).into()
+        }),
+    )));
+
     let mut texture = texture_creator.create_texture_streaming(None, width, height).unwrap();
 
     let mut now = Instant::now();
@@ -172,22 +212,31 @@ fn main() {
                     break 'running
                 },
                 Event::KeyDown { keycode: Some(Keycode::A), ..} => {
-                    camera.origin.x -= 0.1;
+                    camera.origin = camera.origin + camera.right * 0.1;
                 },
                 Event::KeyDown { keycode: Some(Keycode::D), ..} => {
-                    camera.origin.x += 0.1;
+                    camera.origin = camera.origin - camera.right * 0.1;
                 },
                 Event::KeyDown { keycode: Some(Keycode::W), ..} => {
-                    camera.origin.y -= 0.1;
+                    camera.origin = camera.origin - camera.up * 0.1;
                 },
                 Event::KeyDown { keycode: Some(Keycode::S), ..} => {
-                    camera.origin.y += 0.1;
+                    camera.origin = camera.origin + camera.up * 0.1
+                },
+                Event::KeyDown { keycode: Some(Keycode::Z), ..} => {
+                    camera.origin = camera.origin + camera.direction * 0.1;
+                },
+                Event::KeyDown { keycode: Some(Keycode::X), ..} => {
+                    camera.origin = camera.origin - camera.direction * 0.1;
                 },
                 Event::KeyDown { keycode: Some(Keycode::Q), ..} => {
-                    camera.direction = rotate(&camera.direction, &Triple {x: 0.0, y: 1.0, z: 0.0}, 0.1);
+                    camera.direction = rotate(camera.direction, camera.up, -0.01);
+                    camera.right = camera.direction.cross_prod(camera.up).unit_vector();
+
                 },
                 Event::KeyDown { keycode: Some(Keycode::E), ..} => {
-                    camera.direction = rotate(&camera.direction, &Triple {x: 0.0, y: 1.0, z: 0.0}, -0.1);
+                    camera.direction = rotate(camera.direction, camera.up, 0.01);
+                    camera.right = camera.direction.cross_prod(camera.up).unit_vector();
                 },
                 
                 _ => {}

@@ -19,6 +19,16 @@ impl Triple {
         let other = other.borrow();
         self.x * other.x + self.y * other.y + self.z * other.z
     }
+
+    pub fn cross_prod<T: std::borrow::Borrow<Triple>>(&self, other: T) -> Triple {
+        let Triple { x: ax, y: ay, z: az } = self;
+        let Triple { x: bx, y: by, z: bz } = other.borrow();
+        Triple {
+            x: ay * bz - az * by,
+            y: az * bx - ax * bz,
+            z: ax * by - ay * bx,
+        }
+    }
 }
 
 impl std::ops::Add for Triple {

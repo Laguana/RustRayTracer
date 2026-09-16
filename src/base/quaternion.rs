@@ -1,5 +1,7 @@
 use crate::base::ray::Triple;
 
+use std::borrow::Borrow;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Quaternion {
     r: f32,
@@ -29,8 +31,8 @@ impl Quaternion {
     }
 }
 
-pub fn rotate(point: &Triple, axis: &Triple, radians: f32) -> Triple {
-    let Triple{ x, y, z } = axis.unit_vector();
+pub fn rotate<T1: Borrow<Triple>, T2: Borrow<Triple>>(point: T1, axis: T2, radians: f32) -> Triple {
+    let Triple{ x, y, z } = axis.borrow().unit_vector();
     // A rotation around an axis (x,y,z) by angle phi
     // corresponds to R a R^-1 where R = {r: cos(phi/2) .. }, the non-r parts of R are a vector pointing in the x y z direction
     // and a is { r: 0 .. } with the non-real parts being the 3d vector to rotate
@@ -38,7 +40,7 @@ pub fn rotate(point: &Triple, axis: &Triple, radians: f32) -> Triple {
     let cos = (radians/2.0).cos();
     let sin = (radians/2.0).sin();
     let rotation = Quaternion { r: cos, i: sin * x, j: sin * y, k: sin * z };
-    let Triple{ x: px, y: py, z: pz} = point;
+    let Triple{ x: px, y: py, z: pz} = point.borrow();
     let subject = Quaternion { r: 0.0, i: *px, j: *py, k: *pz};
     let Quaternion{ i: rx, j: ry, k: rz,  .. } = rotation * subject * (rotation.conjugate()); 
     Triple{ x: rx, y: ry, z: rz }
