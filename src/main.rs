@@ -7,6 +7,7 @@ use base::light;
 use base::camera::Camera;
 use base::ray::Triple;
 use base::quaternion::rotate;
+use base::tracable::Material;
 use shapes::plane::Plane;
 use shapes::plane::PlaneSegment;
 use shapes::sphere::Sphere;
@@ -21,6 +22,7 @@ use std::time::Instant;
 fn main() {
 
     let (width, height): (u32, u32) = (400, 400);
+    let bounces = 3;
 
     let mut camera = Camera::new(Triple {
         x: 0.0,
@@ -95,6 +97,7 @@ fn main() {
             },
             1.0,
         ),
+        0.5,
     )));
 
     scene.add_object(Box::new(objects::normal_sphere::NormalSphere::new(
@@ -106,6 +109,7 @@ fn main() {
             },
             0.5,
         ),
+        0.0,
     )));
 
     scene.add_object(Box::new(objects::colored_plane::ColoredPlane::new(
@@ -138,10 +142,17 @@ fn main() {
         Box::new(|u, v| {
             let x = (u * 10.0).trunc() as u8;
             let y = (v * 10.0).trunc() as u8;
-            if (x + y) % 2 == 0 {
+            let tx = 0.5 - (u * 10.0) - (u * 10.0).trunc();
+            let ty = 0.5 - (v * 10.0) - (v * 10.0).trunc();
+            let color = if (x + y) % 2 == 0 {
                 (1.0, 1.0, 1.0, 1.0).into()
             } else {
                 (0.0, 0.0, 0.0, 1.0).into()
+            };
+            Material {
+                color,
+                reflectivity: if color.r == 0.0 { 0.1 } else { 0.0 },
+                normal: (0.01 * tx, 0.01 * ty, 0.0).into()
             }
         }),
     )));
@@ -174,7 +185,8 @@ fn main() {
             5.0,
         ),
         Box::new(|u, v| {
-            (10.0*u, 10.0*v, 0.0, 1.0).into()
+            let color = (10.0*u, 10.0*v, 0.0, 1.0).into();
+            Material { color, reflectivity: 0.0, normal: (0.0, 0.0, 0.0).into() }
         }),
     )));
 
@@ -190,7 +202,7 @@ fn main() {
 
                     let r = camera.pixel_ray(x_idx, y_idx);
 
-                    let color: sdl3::pixels::Color = scene.get_color(&r).into();
+                    let color: sdl3::pixels::Color = scene.get_color(&r, bounces).into();
 
                     // HACK: empirically this works right now, really it should
                     // be done based on the pixel format.

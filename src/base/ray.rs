@@ -31,6 +31,14 @@ impl Triple {
     }
 }
 
+impl From<(f32, f32, f32)> for Triple {
+    fn from((x,y,z): (f32, f32, f32)) -> Triple {
+        return Triple {
+            x, y, z
+        }
+    }
+}
+
 impl std::ops::Add for Triple {
     type Output = Self;
 

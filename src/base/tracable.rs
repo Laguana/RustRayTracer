@@ -7,9 +7,14 @@ pub trait Tracable {
     fn intersect(&self, ray: &Ray) -> Vec<f32>;
 }
 
+pub struct Material {
+    pub color: RGBA,
+    pub reflectivity: f32,
+    pub normal: Triple,
+}
+
 pub trait Renderable {
-    fn material_color(&self, ray: &Ray, point: &Triple) -> RGBA;
-    fn normal(&self, point: &Triple) -> Triple;
+    fn material(&self, point: &Triple) -> Material;
 }
 
 pub trait Drawable : Tracable + Renderable {

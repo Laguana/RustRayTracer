@@ -69,16 +69,23 @@ impl Scene {
         })
     }
 
-    pub fn get_color(&self, ray: &Ray) -> color::RGBA {
+    pub fn get_color(&self, ray: &Ray, bounces: u8) -> color::RGBA {
         match self.cast_ray(ray) {
             None => (self.skybox)(ray),
             Some((distance, obj)) => {
                 //println!("{:?}@{}", obj, distance);
                 let point = ray.origin + (ray.direction * distance);
-                let material_color = obj.material_color(ray, &point);
-                let normal = obj.normal(&point);
+                let tracable::Material { color, reflectivity, normal } = obj.material(&point);
 
-                self.get_diffuse(&point, &normal, material_color)
+                let diffuse = self.get_diffuse(&point, &normal, color);
+
+                if bounces > 0 && reflectivity > 0.0 {
+                    let reflected_direction = (ray.direction - normal * 2.0 * (normal.dot_prod(ray.direction))).unit_vector();
+                    let reflected_ray = Ray { origin: point + reflected_direction * 1e-5, direction: reflected_direction};
+                    diffuse + self.get_color(&reflected_ray, bounces - 1 ) * reflectivity
+                } else {
+                    diffuse
+                }
             }
         }
     }
