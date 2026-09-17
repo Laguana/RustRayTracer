@@ -22,7 +22,7 @@ use std::time::Instant;
 fn main() {
 
     let (width, height): (u32, u32) = (400, 400);
-    let bounces = 3;
+    let bounces = 64;
 
     let mut camera = Camera::new(Triple {
         x: 0.0,
@@ -98,6 +98,7 @@ fn main() {
             1.0,
         ),
         0.5,
+        1.0,
     )));
 
     scene.add_object(Box::new(objects::normal_sphere::NormalSphere::new(
@@ -110,6 +111,7 @@ fn main() {
             0.5,
         ),
         0.0,
+        0.2,
     )));
 
     scene.add_object(Box::new(objects::colored_plane::ColoredPlane::new(
@@ -152,7 +154,8 @@ fn main() {
             Material {
                 color,
                 reflectivity: if color.r == 0.0 { 0.1 } else { 0.0 },
-                normal: (0.01 * tx, 0.01 * ty, 0.0).into()
+                normal: (0.01 * tx, 0.01 * ty, 0.0).into(),
+                refractive_index: 1.0,
             }
         }),
     )));
@@ -186,7 +189,7 @@ fn main() {
         ),
         Box::new(|u, v| {
             let color = (10.0*u, 10.0*v, 0.0, 1.0).into();
-            Material { color, reflectivity: 0.0, normal: (0.0, 0.0, 0.0).into() }
+            Material { color, reflectivity: 0.0, normal: (0.0, 0.0, 0.0).into(), refractive_index: 1.0, }
         }),
     )));
 
@@ -202,7 +205,7 @@ fn main() {
 
                     let r = camera.pixel_ray(x_idx, y_idx);
 
-                    let color: sdl3::pixels::Color = scene.get_color(&r, bounces).into();
+                    let color: sdl3::pixels::Color = scene.get_color(&r, bounces, 1.0).into();
 
                     // HACK: empirically this works right now, really it should
                     // be done based on the pixel format.

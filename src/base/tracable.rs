@@ -11,6 +11,7 @@ pub struct Material {
     pub color: RGBA,
     pub reflectivity: f32,
     pub normal: Triple,
+    pub refractive_index: f32,
 }
 
 pub trait Renderable {

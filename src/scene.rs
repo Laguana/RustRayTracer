@@ -69,23 +69,44 @@ impl Scene {
         })
     }
 
-    pub fn get_color(&self, ray: &Ray, bounces: u8) -> color::RGBA {
+    pub fn get_color(&self, ray: &Ray, bounces: u8, medium_refractive_index: f32) -> color::RGBA {
         match self.cast_ray(ray) {
             None => (self.skybox)(ray),
             Some((distance, obj)) => {
                 //println!("{:?}@{}", obj, distance);
                 let point = ray.origin + (ray.direction * distance);
-                let tracable::Material { color, reflectivity, normal } = obj.material(&point);
+                let tracable::Material { color, reflectivity, normal, refractive_index } = obj.material(&point);
 
                 let diffuse = self.get_diffuse(&point, &normal, color);
 
-                if bounces > 0 && reflectivity > 0.0 {
-                    let reflected_direction = (ray.direction - normal * 2.0 * (normal.dot_prod(ray.direction))).unit_vector();
+                let ray_normal_prod = normal.dot_prod(ray.direction);
+
+                let reflection = if bounces > 0 && reflectivity > 0.0 {
+                    let reflected_direction = (ray.direction - normal * 2.0 * ray_normal_prod).unit_vector();
                     let reflected_ray = Ray { origin: point + reflected_direction * 1e-5, direction: reflected_direction};
-                    diffuse + self.get_color(&reflected_ray, bounces - 1 ) * reflectivity
+                    self.get_color(&reflected_ray, bounces - 1, medium_refractive_index ) * reflectivity
                 } else {
-                    diffuse
-                }
+                    (0.0, 0.0, 0.0, 0.0).into()
+                };
+
+                let transparency = 1.0 - color.a;
+                let refraction = if bounces > 0 && transparency > 0.0 {
+                    let ratio = medium_refractive_index / refractive_index;
+                    let descriminant = 1.0 - ratio * ratio * (1.0 - ray_normal_prod * ray_normal_prod);
+                    if descriminant < 0.0 {
+                        // total internal rerflection
+                        (0.0 ,0.0 ,0.0 ,0.0).into()
+                    } else {
+                        let refracted_direction = ray.direction * ratio - normal * (descriminant.sqrt() - ratio * ray_normal_prod);
+                        let refracted_ray = Ray { origin: point + refracted_direction * 1e-5, direction: refracted_direction };
+                        self.get_color(&refracted_ray, bounces -1, refractive_index) * transparency
+                         
+                    }
+                } else {
+                    (0.0, 0.0, 0.0, 0.0).into()
+                };
+
+                diffuse * diffuse.a + reflection + refraction
             }
         }
     }

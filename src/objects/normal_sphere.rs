@@ -10,11 +10,12 @@ use crate::shapes::sphere::Sphere;
 pub struct NormalSphere {
     sphere: Sphere,
     reflectivity: f32,
+    opacity: f32,
 }
 
 impl NormalSphere {
-    pub fn new(sphere: Sphere, reflectivity: f32) -> NormalSphere {
-        NormalSphere { sphere, reflectivity }
+    pub fn new(sphere: Sphere, reflectivity: f32, opacity: f32) -> NormalSphere {
+        NormalSphere { sphere, reflectivity, opacity }
     }
 }
 
@@ -32,10 +33,11 @@ impl Renderable for NormalSphere {
                 (normal.x + 1.0) / 2.0,
                 (normal.y + 1.0) / 2.0,
                 (normal.z + 1.0) / 2.0,
-                1.0,
+                self.opacity,
                 ).into(),
             reflectivity: self.reflectivity,
-            normal: self.sphere.normal(p)
+            normal: self.sphere.normal(p),
+            refractive_index: 10.0,
         }
 
     }

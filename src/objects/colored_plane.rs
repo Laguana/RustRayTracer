@@ -36,8 +36,8 @@ impl Renderable for ColoredPlane {
         p: &Triple,
     ) -> Material {
         let (u, v) = self.geometry.uv_coords(p);
-        let Material { color, reflectivity, normal } = (self.uv_mapped_material)(u/self.geometry.u_width, v/self.geometry.v_height);
-        Material { color, reflectivity, normal: (self.geometry.plane.normal + normal).unit_vector() }
+        let Material { color, reflectivity, normal, refractive_index } = (self.uv_mapped_material)(u/self.geometry.u_width, v/self.geometry.v_height);
+        Material { color, reflectivity, normal: (self.geometry.plane.normal + normal).unit_vector(), refractive_index }
     }
 }
 
